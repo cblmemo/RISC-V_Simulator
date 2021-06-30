@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
-project(RISC_V_Simulator)
+project(code)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(RISC_V_Simulator main.cpp)
+add_executable(code main.cpp)
