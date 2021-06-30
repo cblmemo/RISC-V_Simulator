@@ -5,12 +5,88 @@
 #ifndef RISC_V_SIMULATOR_CPU_H
 #define RISC_V_SIMULATOR_CPU_H
 
-#include "Register.h"
-#include "Memory.h"
+#include <iostream>
+#include "parser.h"
 
 class CPU {
 private:
     using uint = unsigned int;
+    using uc = unsigned char;
+    
+    class Memory {
+    private:
+        static constexpr uint MEMORY_SIZE = 0x20000;
+        
+        uc memory[MEMORY_SIZE] = {0};
+    
+    public:
+        void initialize() {
+            uint address;
+            std::string address_str;
+            char temp;
+            while (std::cin >> temp) {
+                if (temp == '@') {
+                    std::cin >> address_str;
+                    address = hex_to_uint(address_str);
+                }
+                else if (temp == '#')break;
+                else {
+                    memory[address] |= hex_to_uc(temp) << 4;
+                    std::cin >> temp;
+                    memory[address++] |= hex_to_uc(temp);
+                }
+            }
+        }
+        
+        uint getCommand(uint address) {
+            return (uint) memory[address] + ((uint) memory[address + 1] << 8) + ((uint) memory[address + 2] << 16) + ((uint) memory[address + 3] << 24);
+        }
+        
+        uint readByte(uint addr) {
+            return (uint) memory[addr];
+        }
+        
+        uint readHalfWord(uint addr) {
+            return (uint) memory[addr] | (uint) memory[addr + 1] << 8;
+        }
+        
+        uint readWord(uint addr) {
+            return (uint) memory[addr] | (uint) memory[addr + 1] << 8 | (uint) memory[addr + 2] << 16 | (uint) memory[addr + 3] << 24;
+        }
+        
+        void writeByte(uint addr, uint val) {
+            memory[addr] = (uc) val;
+        }
+        
+        void writeHalfWord(uint addr, uint val) {
+            memory[addr] = (uc) val;
+            memory[addr + 1] = (uc) (val >> 8);
+        }
+        
+        void writeWord(uint addr, uint val) {
+            memory[addr] = (uc) val;
+            memory[addr + 1] = (uc) (val >> 8);
+            memory[addr + 2] = (uc) (val >> 16);
+            memory[addr + 3] = (uc) (val >> 24);
+        }
+    };
+    
+    class Register {
+    private:
+        using uint = unsigned int;
+        
+        uint reg[32] = {0};
+    
+    public:
+        uint &operator[](uint addr) {
+            if (addr == 0)reg[0] = 0;
+            return reg[addr];
+        }
+        
+        const uint &operator[](uint addr) const {
+            return reg[addr];
+        }
+    };
     
     static constexpr uint codes[9] = {
             0b0110111,
@@ -402,6 +478,7 @@ private:
 
 public:
     void runSequenceExecute() {
+        mem.initialize();
         while (true) {
             InstructionFetch();
             if (stop)break;
