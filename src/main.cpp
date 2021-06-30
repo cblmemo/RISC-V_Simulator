@@ -1,7 +1,7 @@
 #include "CPU.h"
 
 int main() {
-    CPU cpu;
-    cpu.runSequenceExecute();
+    CPU m1;
+    m1.runSequenceExecute();
     return 0;
 }
