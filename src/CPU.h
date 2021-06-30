@@ -88,18 +88,6 @@ private:
         }
     };
     
-    static constexpr uint codes[9] = {
-            0b0110111,
-            0b0010111,
-            0b1101111,
-            0b1100111,
-            0b1100011,
-            0b0000011,
-            0b0100011,
-            0b0010011,
-            0b0110011,
-    };
-    
     Register reg;
     Memory mem;
     bool stop = false;
@@ -118,14 +106,11 @@ private:
     
     void InstructionDecode() { // && Register Fetch
         uint code = get_opcode(fReg.cmd);
-        int index;
-        for (int i = 0; i < 9; i++)
-            if (code == codes[i])index = i;
-        switch (index) {
-            case 0:
-            case 1:
-            case 2:
-            case 3:
+        switch (code) {
+            case 0b0110111:
+            case 0b0010111:
+            case 0b1101111:
+            case 0b1100111:
                 dReg.type = (CommandType) code;
                 break;
             default:
