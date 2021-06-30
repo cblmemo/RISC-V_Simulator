@@ -11,9 +11,8 @@
 class CPU {
 private:
     using uint = unsigned int;
-    using uc = unsigned char;
     
-    uint codes[9] = {
+    static constexpr uint codes[9] = {
             0b0110111,
             0b0010111,
             0b1101111,
@@ -39,10 +38,9 @@ private:
     
     struct IF2IDReg {
         uint cmd;
-    } fReg;
+    } fReg {};
     
     void InstructionDecode() { // && Register Fetch
-        //parse immediate and read from register
         uint code = get_opcode(fReg.cmd);
         int index;
         for (int i = 0; i < 9; i++)
@@ -128,6 +126,9 @@ private:
                 dReg.rs1val = reg[rs1];
                 dReg.rs2val = reg[rs2];
                 break;
+            default:
+                std::cerr << "[Error]function [InstructionDecode()] wrong with a undefined CommandType." << std::endl;
+                break;
         }
     }
     
@@ -138,7 +139,7 @@ private:
         uint rs2val;
         uint rd;
         uint shamt;
-    } dReg;
+    } dReg {};
     
     void Execute() {
         //calculate
@@ -253,6 +254,9 @@ private:
             case AND:
                 eReg.val = dReg.rs1val & dReg.rs2val;
                 break;
+            default:
+                std::cerr << "[Error]function [Execute()] wrong with a undefined CommandType." << std::endl;
+                break;
         }
         eReg.type = dReg.type;
         eReg.rs1val = dReg.rs1val;
@@ -268,11 +272,10 @@ private:
         uint rs1val;
         uint rs2val;
         uint rd;
-    } eReg;
+    } eReg {};
     
     void MemoryAccess() {
         //read from and write to memory
-        uint readStore;
         switch (eReg.type) {
             case LUI:
             case AUIPC:
@@ -308,26 +311,21 @@ private:
                 //do nothing
                 break;
             case LB:
-                readStore = mem.readByte(eReg.rs1val + eReg.immediate);
-                if ((readStore & 0x00000080) == 0x00000080)readStore |= 0xffffff00;
-                mReg.val = readStore;
+                mReg.val = mem.readByte(eReg.rs1val + eReg.immediate);
+                if ((mReg.val & 0x00000080) == 0x00000080)mReg.val |= 0xffffff00;
                 break;
             case LH:
-                readStore = mem.readHalfWord(eReg.rs1val + eReg.immediate);
-                if ((readStore & 0x00008000) == 0x00008000)readStore |= 0xffff0000;
-                mReg.val = readStore;
+                mReg.val = mem.readHalfWord(eReg.rs1val + eReg.immediate);
+                if ((mReg.val & 0x00008000) == 0x00008000)mReg.val |= 0xffff0000;
                 break;
             case LW:
-                readStore = mem.readWord(eReg.rs1val + eReg.immediate);
-                mReg.val = readStore;
+                mReg.val = mem.readWord(eReg.rs1val + eReg.immediate);
                 break;
             case LBU:
-                readStore = mem.readByte(eReg.rs1val + eReg.immediate);
-                mReg.val = readStore;
+                mReg.val = mem.readByte(eReg.rs1val + eReg.immediate);
                 break;
             case LHU:
-                readStore = mem.readHalfWord(eReg.rs1val + eReg.immediate);
-                mReg.val = readStore;
+                mReg.val = mem.readHalfWord(eReg.rs1val + eReg.immediate);
                 break;
             case SB:
                 mem.writeByte(eReg.rs1val + eReg.immediate, eReg.rs2val);
@@ -339,6 +337,7 @@ private:
                 mem.writeWord(eReg.rs1val + eReg.immediate, eReg.rs2val);
                 break;
             default:
+                std::cerr << "[Error]function [MemoryAccess()] wrong with a undefined CommandType." << std::endl;
                 break;
         }
         mReg.type = eReg.type;
@@ -349,7 +348,7 @@ private:
         CommandType type;
         uint rd;
         uint val;
-    } mReg;
+    } mReg {};
     
     void WriteBack() {
         //write to register
@@ -396,12 +395,13 @@ private:
                 //do nothing
                 break;
             default:
+                std::cerr << "[Error]function [WriteBack()] wrong with a undefined CommandType." << std::endl;
                 break;
         }
     }
 
 public:
-    void runProgramme() {
+    void runSequenceExecute() {
         while (true) {
             InstructionFetch();
             if (stop)break;
@@ -410,7 +410,7 @@ public:
             MemoryAccess();
             WriteBack();
         }
-        cout << (((uint) reg[10]) & 0x000000ff) << endl;
+        std::cout << (((uint) reg[10]) & 0x000000ff) << std::endl;
     }
 };
 

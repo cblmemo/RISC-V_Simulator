@@ -8,11 +8,6 @@
 #include <iostream>
 #include "parser.h"
 
-using std::cin;
-using std::cout;
-using std::endl;
-using std::string;
-
 class Memory {
 private:
     using uc = unsigned char;
@@ -26,17 +21,17 @@ private:
     
     void initialize() {
         uint address;
-        string address_str;
+        std::string address_str;
         char temp;
-        while (cin >> temp) {
+        while (std::cin >> temp) {
             if (temp == '@') {
-                cin >> address_str;
+                std::cin >> address_str;
                 address = hex_to_uint(address_str);
             }
             else if (temp == '#')break;
             else {
                 memory[address] |= hex_to_uc(temp) << 4;
-                cin >> temp;
+                std::cin >> temp;
                 memory[address++] |= hex_to_uc(temp);
             }
         }

@@ -7,9 +7,10 @@
 
 #include <string>
 
-typedef unsigned int uint;
+using uint = unsigned int;
+using uc = unsigned char;
 
-unsigned int hex_to_uint(const std::string &str) {
+uint hex_to_uint(const std::string &str) {
     unsigned int ret = 0;
     for (char c:str) {
         ret <<= 4;
@@ -19,7 +20,7 @@ unsigned int hex_to_uint(const std::string &str) {
     return ret;
 }
 
-unsigned char hex_to_uc(char c) {
+uc hex_to_uc(char c) {
     return c >= '0' && c <= '9' ? c - '0' : c - 'A' + 10;
 }
 
@@ -28,7 +29,7 @@ enum CommandFormat {
 };
 
 enum CommandType {
-    //format: [funct7](7bit)+[funct3](3bit)+[opcode](7bit)
+    //format: [funct7](7bit) + [funct3](3bit) + [opcode](7bit)
     LUI = 0b0110111,
     AUIPC = 0b0010111,
     JAL = 0b1101111,
@@ -114,7 +115,7 @@ CommandFormat get_format(CommandType type) {
         case AND:
             return CommandFormat::R;
         default:
-            std::cerr << "[Error]function [get_format] wrong with a undefined CommandType." << std::endl;
+            std::cerr << "[Error]function [get_format()] wrong with a undefined CommandType." << std::endl;
             return CommandFormat::None;
     }
 }
@@ -154,6 +155,7 @@ uint get_immediate(uint cmd, CommandFormat type) {
             if ((cmd & (uint) 0x80000000) == 0x80000000)ret |= 0xfff00000;
             break;
         default:
+            std::cerr << "[Error]function [get_immediate()] wrong with a undefined CommandType." << std::endl;
             break;
     }
     return ret;

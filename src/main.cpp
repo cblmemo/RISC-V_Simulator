@@ -1,7 +1,7 @@
 #include "CPU.h"
 
 int main() {
-    CPU xxx;
-    xxx.runProgramme();
+    CPU cpu;
+    cpu.runSequenceExecute();
     return 0;
 }
