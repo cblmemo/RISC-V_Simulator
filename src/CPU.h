@@ -425,7 +425,6 @@ private:
         }
         f2dReg.instruction = mem.getInstruction(pc);
         dPri("[debug] pc last fetched is ", pc);
-        
         f2dReg.orgAddr = pc;
         if (isBranchInst(f2dReg.instruction)) {
             if (branchPredict[hashPC(pc)].predict()) {
@@ -744,15 +743,6 @@ private:
                 std::cerr << "[Error]function [Execute()] wrong with a undefined CommandType." << std::endl;
                 break;
         }
-//        if (isJumpType(d2eReg.type)) {
-//            if (actAddr != d2eReg.tarAddr) {
-//                pc = actAddr;
-//                pause[1] = -1;
-//            }
-//            branchPredict[hashPC(d2eReg.orgAddr)].update(true);
-//            if (d2eReg.type == JAL)buffer.push(d2eReg.orgAddr, actAddr);
-//            e2mReg.val = d2eReg.orgAddr + 4;
-//        }
         if (isBranchType(d2eReg.type)) {
             if (branchResult) {
                 branchPredict[hashPC(d2eReg.orgAddr)].update(true);
