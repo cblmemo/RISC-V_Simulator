@@ -1,16 +1,8 @@
-//
-// Created by Rainy Memory on 2021/6/28.
-//
-
-#ifndef RISC_V_SIMULATOR_CPU_H
-#define RISC_V_SIMULATOR_CPU_H
-
+#pragma GCC optimize ("Ofast")
 #include <iostream>
 #include <algorithm>
 #include <iomanip>
 #include <bitset>
-
-//#define debug
 
 class CPU {
 private:
@@ -942,4 +934,8 @@ public:
     }
 };
 
-#endif //RISC_V_SIMULATOR_CPU_H
+int main() {
+    CPU cpu;
+    cpu.runFiveStagePipeline();
+    return 0;
+}
