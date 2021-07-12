@@ -1,4 +1,5 @@
 #pragma GCC optimize ("Ofast")
+
 #include <iostream>
 #include <algorithm>
 #include <iomanip>
@@ -374,6 +375,7 @@ private:
     bool stop = false;
     uint pc = 0;
     int pause[5] = {0, 1, 2, 3, 4};// IF ID EX MEM WB
+    int cycle = 0;
     
     static bool isJumpType(CommandType t) {
         static constexpr uint targetSize = 2;
@@ -404,7 +406,7 @@ private:
     
     void InstructionFetch() {
         //read command to register
-        if (stop)return;
+        if (stop || cycle > 0)return;
         uint index = 0;
         if (pause[index] > 0) {
             pause[index]--;
@@ -437,7 +439,7 @@ private:
     } f2dReg {};
     
     void InstructionDecode() { // && Register Fetch
-        if (stop)return;
+        if (stop || cycle > 0)return;
         uint index = 1;
         if (pause[index] > 0) {
             pause[index]--;
@@ -612,7 +614,7 @@ private:
     } d2eReg {};
     
     void Execute() {//calculate
-        if (stop)return;
+        if (stop || cycle > 0)return;
         e2mReg.invalid = false;
         uint index = 2;
         if (pause[index] > 0) {
@@ -736,15 +738,6 @@ private:
                 std::cerr << "[Error]function [Execute()] wrong with a undefined CommandType." << std::endl;
                 break;
         }
-//        if (isJumpType(d2eReg.type)) {
-//            if (actAddr != d2eReg.tarAddr) {
-//                pc = actAddr;
-//                pause[1] = -1;
-//            }
-//            branchPredict[hashPC(d2eReg.orgAddr)].update(true);
-//            if (d2eReg.type == JAL)buffer.push(d2eReg.orgAddr, actAddr);
-//            e2mReg.val = d2eReg.orgAddr + 4;
-//        }
         if (isBranchType(d2eReg.type)) {
             if (branchResult) {
                 branchPredict[hashPC(d2eReg.orgAddr)].update(true);
@@ -786,7 +779,10 @@ private:
     
     void MemoryAccess() {
         //read from and write to memory
-        if (stop)return;
+        if (stop || cycle > 0) {
+            cycle--;
+            return;
+        }
         m2wReg.invalid = false;
         uint index = 3;
         if (pause[index] > 0) {
@@ -804,6 +800,7 @@ private:
         }
         if (e2mReg.instruction == 0x0ff00513)return setStop();
         m2wReg.needWB = true;
+        bool pauseFlag = false;
         switch (e2mReg.type) {
             case LUI:
             case AUIPC:
@@ -839,31 +836,39 @@ private:
                 m2wReg.needWB = false;
                 break;
             case LB:
+                pauseFlag = true;
                 m2wReg.val = mem.readByte(e2mReg.rs1val + e2mReg.immediate);
                 if ((m2wReg.val & 0x00000080) == 0x00000080)m2wReg.val |= 0xffffff00;
                 break;
             case LH:
+                pauseFlag = true;
                 m2wReg.val = mem.readHalfWord(e2mReg.rs1val + e2mReg.immediate);
                 if ((m2wReg.val & 0x00008000) == 0x00008000)m2wReg.val |= 0xffff0000;
                 break;
             case LW:
+                pauseFlag = true;
                 m2wReg.val = mem.readWord(e2mReg.rs1val + e2mReg.immediate);
                 break;
             case LBU:
+                pauseFlag = true;
                 m2wReg.val = mem.readByte(e2mReg.rs1val + e2mReg.immediate);
                 break;
             case LHU:
+                pauseFlag = true;
                 m2wReg.val = mem.readHalfWord(e2mReg.rs1val + e2mReg.immediate);
                 break;
             case SB:
+                pauseFlag = true;
                 m2wReg.needWB = false;
                 mem.writeByte(e2mReg.rs1val + e2mReg.immediate, e2mReg.rs2val);
                 break;
             case SH:
+                pauseFlag = true;
                 m2wReg.needWB = false;
                 mem.writeHalfWord(e2mReg.rs1val + e2mReg.immediate, e2mReg.rs2val);
                 break;
             case SW:
+                pauseFlag = true;
                 m2wReg.needWB = false;
                 mem.writeWord(e2mReg.rs1val + e2mReg.immediate, e2mReg.rs2val);
                 break;
@@ -872,6 +877,7 @@ private:
                 break;
         }
         m2wReg.rd = e2mReg.rd;
+        if (pauseFlag)cycle = 3;
     }
     
     struct MEM2WBReg {
@@ -883,7 +889,7 @@ private:
     
     void WriteBack() {
         //write to register
-        if (stop)return;
+        if (stop || cycle > 0)return;
         uint index = 4;
         if (pause[index] > 0) {
             pause[index]--;
